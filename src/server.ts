@@ -58,33 +58,6 @@ app.post('/movies', async (req: Request, res: Response): Promise<void> => {
     }
 });
 
-app.post('/seed', async (_: Request, res: Response): Promise<void> => {
-    try {
-        // 1. Cria o Gênero se não existir
-        const genre = await prisma.genre.upsert({
-            where: { name: 'Ficção Científica' },
-            update: {},
-            create: { name: 'Ficção Científica' }
-        });
-
-        // 2. Cria a Língua se não existir
-        const language = await prisma.language.upsert({
-            where: { name: 'Inglês' },
-            update: {},
-            create: { name: 'Inglês' }
-        });
-
-        // 3. Devolve os IDs direto na tela do Insomnia
-        res.status(200).json({
-            message: "Registros criados com sucesso!",
-            genre_id: genre.id,
-            language_id: language.id
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Erro ao rodar o seed" });
-    }
-});
 
 app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando em alta performance na porta ${PORT}`);
