@@ -10,4 +10,43 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Movie {
+  id           String    @id @default(uuid())
+  title        String?   @db.Char(100)
+  release_data DateTime? @db.Date
+  oscar_count  Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  genre_id     String?
+  language_id  String?
+
+  genre    Genre?    @relation(fields: [genre_id], references: [id])
+  language Language? @relation(fields: [language_id], references: [id])
+}
+
+model Genre {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  movies    Movie[]
+  @@map("genres")
+}
+
+model Language {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  movies    Movie[]
+  @@map("languages")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
 }
