@@ -1,14 +1,14 @@
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import express, { type Request, type Response } from 'express';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-import express, { type Request, type Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,10 +24,6 @@ app.get('/movies', async (_: Request, res: Response): Promise<void> => {
         const movies = await prisma.movie.findMany({
             orderBy: {
                 title: "asc"
-            },
-            include: {
-                genre: true,  
-                language: true 
             }
         });
         res.status(200).json(movies);
@@ -37,15 +33,39 @@ app.get('/movies', async (_: Request, res: Response): Promise<void> => {
     }
 });
 
+// ROTA 2: ADICIONAR FILME (POST)
 app.post('/movies', async (req: Request, res: Response): Promise<void> => {
     try {
-       const { title,  releaseDate, oscar_count, genre_id, language_id } = req.body;
+        const { title, releaseDate, oscar_count, genre_id, language_id } = req.body;
+
+        if (!title || !genre_id || !language_id) {
+            res.status(400).json({ error: 'Campos obrigatórios ausentes: title, genre_id ou language_id' });
+            return;
+        }
+
+
+        const sanitizedTitle = title.trim();
+
+        const movieWithSameTitle = await prisma.movie.findFirst({
+            where: {
+                title: { equals: sanitizedTitle, mode: 'insensitive' }
+            },
+            include: {
+                genre: true,
+                language: true
+            }
+        });
+
+        if (movieWithSameTitle) {
+            res.status(409).json({ error: 'Já existe um filme com esse título' });
+            return;
+        }
 
         const newMovie = await prisma.movie.create({
             data: {
-                title: title,
+                title: sanitizedTitle,
                 release_data: releaseDate ? new Date(releaseDate) : null,
-                oscar_count: oscar_count ? Number(oscar_count) : null,
+                oscar_count: oscar_count !== undefined ? Number(oscar_count) : null,
                 genre_id: genre_id || null,
                 language_id: language_id || null
             }
@@ -58,7 +78,47 @@ app.post('/movies', async (req: Request, res: Response): Promise<void> => {
     }
 });
 
+app.put('/movies/:id', async (req: Request, res: Response): Promise<void> => {
+    try {
+        
+        const  id  = req.params.id as string;
+        console.log("ID recebido na rota PUT:", id);
+        const title = req.body.title as string;
+        const genre_id = req.body.genre_id as string;
+        const language_id = req.body.language_id as string;
+        const oscar_count = req.body.oscar_count;
+        const release_data = req.body.release_data;
 
+        const movieExists = await prisma.movie.findUnique({ where: { id } });
+
+        if (!movieExists) {
+            res.status(404).json({ error: 'Filme não encontrado' });
+            return;
+        }
+
+       const updateData: Prisma.MovieUpdateInput = {};
+
+       
+        if (title) updateData.title = title.trim();
+        if (release_data) updateData.release_data = new Date(release_data);
+        if (genre_id) updateData.genre = { connect: { id: genre_id } };
+        if (language_id) updateData.language = { connect: { id: language_id } };
+        if (oscar_count !== undefined && oscar_count !== null) {
+            updateData.oscar_count = Number(oscar_count);
+        }
+
+        const movie = await prisma.movie.update({
+            where: {id},
+            data: updateData
+        })
+        res.status(200).send(movie);
+    } catch (error) {
+        console.error('[DATABASE_ERROR]:', error);
+        res.status(500).json({ error: 'Erro interno ao atualizar o filme' });
+    }
+
+
+});
 app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando em alta performance na porta ${PORT}`);
     console.log(`DATABASE_URL validada: ${process.env.DATABASE_URL ? '✅ Injetada com Sucesso' : '❌ Vazia'}`);
