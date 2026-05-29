@@ -131,12 +131,40 @@ app.delete('/movies/:id', async (req: Request, res: Response) => {
         };
 
         await prisma.movie.delete({ where: { id } });
-        
+
         res.status(200).send({ message: 'Filme deletado com sucesso!' });
     } catch (error) {
         console.error('[DATABASE_ERROR]:', error);
         res.status(500).json({ error: 'Erro interno ao deletar o filme' });
     }
+});
+
+app.get("/movies/genre/:genreName", async (req: Request, res: Response) => {
+    try {
+        const genreName = req.params.genreName as string;
+        const moviesFiltered = await prisma.movie.findMany({
+            where: {
+                genre: {
+                    is: {
+                        name: {
+                            equals: genreName,
+                            mode: 'insensitive'
+                        }
+                    }
+                }
+            },
+            include: {
+                genre: true,
+                language: true
+            }
+        });
+
+        res.status(200).json(moviesFiltered);
+    } catch (error) {
+        console.error('[DATABASE_ERROR]:', error);
+        res.status(500).json({ error: 'Erro interno ao buscar filmes por gênero' });
+    }
+
 });
 app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando em alta performance na porta ${PORT}`);
