@@ -80,9 +80,8 @@ app.post('/movies', async (req: Request, res: Response): Promise<void> => {
 
 app.put('/movies/:id', async (req: Request, res: Response): Promise<void> => {
     try {
-        
-        const  id  = req.params.id as string;
-        console.log("ID recebido na rota PUT:", id);
+
+        const id = req.params.id as string;
         const title = req.body.title as string;
         const genre_id = req.body.genre_id as string;
         const language_id = req.body.language_id as string;
@@ -96,9 +95,9 @@ app.put('/movies/:id', async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-       const updateData: Prisma.MovieUpdateInput = {};
+        const updateData: Prisma.MovieUpdateInput = {};
 
-       
+
         if (title) updateData.title = title.trim();
         if (release_data) updateData.release_data = new Date(release_data);
         if (genre_id) updateData.genre = { connect: { id: genre_id } };
@@ -108,7 +107,7 @@ app.put('/movies/:id', async (req: Request, res: Response): Promise<void> => {
         }
 
         const movie = await prisma.movie.update({
-            where: {id},
+            where: { id },
             data: updateData
         })
         res.status(200).send(movie);
@@ -118,6 +117,26 @@ app.put('/movies/:id', async (req: Request, res: Response): Promise<void> => {
     }
 
 
+});
+
+app.delete('/movies/:id', async (req: Request, res: Response) => {
+    try {
+        const id = req.params.id as string;
+
+        const movieExist = await prisma.movie.findUnique({ where: { id } });
+
+        if (!movieExist) {
+            res.status(404).send({ message: 'Filme não encontrado para deleção' });
+            return;
+        };
+
+        await prisma.movie.delete({ where: { id } });
+        
+        res.status(200).send({ message: 'Filme deletado com sucesso!' });
+    } catch (error) {
+        console.error('[DATABASE_ERROR]:', error);
+        res.status(500).json({ error: 'Erro interno ao deletar o filme' });
+    }
 });
 app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando em alta performance na porta ${PORT}`);
