@@ -3,7 +3,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import express, { type Request, type Response } from 'express';
 import { Prisma, PrismaClient } from '@prisma/client';
-
+import swaggerUi from 'swagger-ui-express';
+import swaggerDocument from './swagger.json' with { type: 'json' };
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,7 +18,7 @@ const PORT = process.env.PORT || 3000;
 const prisma = new PrismaClient();
 
 app.use(express.json());
-
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 // ROTA 1: BUSCAR FILMES (GET)
 app.get('/movies', async (_: Request, res: Response): Promise<void> => {
     try {
