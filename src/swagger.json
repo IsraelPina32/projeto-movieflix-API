@@ -2,24 +2,18 @@
     "openapi": "3.0.0",
     "info": {
         "title": "MovieFlix API",
-        "version": "1.0.0",
-        "description": "API para gerenciamento de filmes e gêneros"
+        "version": "1.0.0"
     },
-    "servers": [
-        {
-            "url": "http://localhost:3000",
-            "description": "Servidor local"
-        }
-    ],
     "paths": {
         "/movies": {
             "get": {
-                "tags": ["Movies"],
+                "tags": [
+                    "Movies"
+                ],
                 "summary": "Listar filmes",
-                "description": "Retorna uma lista de filmes com seus gêneros",
                 "responses": {
                     "200": {
-                        "description": "Lista de filmes retornada com sucesso",
+                        "description": "Sucesso",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -30,6 +24,45 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/movies/{id}": {
+            "put": {
+                "tags": [
+                    "Movie"
+                ],
+                "summary": "Atualizar filme",
+                "description": "Atualiza as informações de um filme existente",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "ID do filme. **Atenção:** Este campo exige um formato UUID válido. Requisições com formatos incorretos serão rejeitadas pelo servidor com erro 400 (Bad Request).",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MovieInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Filme atualizado com sucesso"
+                    },
+                    "404": {
+                        "description": "Filme não encontrado"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -44,59 +77,60 @@
                 "type": "object",
                 "properties": {
                     "id": {
-                        "type": "integer",
-                        "example": 1
+                        "type": "string",
+                        "format": "uuid"
                     },
                     "title": {
                         "type": "string",
                         "example": "Inception"
                     },
-                    "genre_id": {
-                        "$ref": "#/components/schemas/Genre",
-                        "description": "Gênero do filme",
-                        "type": "string"
+                    "genre": {
+                        "type": "string",
+                        "example": "Ação"
                     },
-                    "language_id": {
-                        "$ref": "#/components/schemas/Language",
-                        "description": "Idioma do filme",
-                        "example": "English"
+                    "language": {
+                        "type": "string",
+                        "example": "Inglês"
                     },
                     "oscar_count": {
-                        "type": "integer",
-                        "description": "Número de Oscars ganhos pelo filme",
-                        "example": 4
+                        "type": "integer"
                     },
                     "release_date": {
                         "type": "string",
-                        "format": "date",
-                        "description": "Data de lançamento do filme",
-                        "example": "2010-07-16"
+                        "format": "date"
                     }
                 }
             },
-            "Genre": {
+            "MovieInput": {
                 "type": "object",
+                "required": [
+                    "title",
+                    "genre_id",
+                    "language_id",
+                    "oscar_count",
+                    "release_date"
+                ],
                 "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "name": {
+                    "title": {
                         "type": "string",
-                        "example": "Sci-Fi"
-                    }
-                }
-            },
-            "Language": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "example": 1
+                        "example": "Inception"
                     },
-                    "name": {
+                    "genre_id": {
                         "type": "string",
-                        "example": "English"
+                        "format": "uuid",
+                        "example": "Ação"
+                    },
+                    "language_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "Inglês"
+                    },
+                    "oscar_count": {
+                        "type": "integer"
+                    },
+                    "release_date": {
+                        "type": "string",
+                        "format": "date"
                     }
                 }
             }
