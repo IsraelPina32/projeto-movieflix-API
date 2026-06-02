@@ -19,6 +19,7 @@ const prisma = new PrismaClient();
 
 app.use(express.json());
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 // ROTA 1: BUSCAR FILMES (GET)
 app.get('/movies', async (_: Request, res: Response): Promise<void> => {
     try {
